@@ -1,29 +1,23 @@
-#' @title Get Several Tracks
-#' @name get_several_tracks
-#' @description This function allows you to load several tracks in a faster way.
-#' @author Alberto Almui?a
-#' @param tracks_id_df Dataframe containing the tracks ids in one of the columns.
-#' @param ids_label Integer indicating the column number of the tracks ids. Default to 1.
-#' @param access_token Spotify Web API token. Defaults to DSpoty::get_spotify_access_token()
+#' @title Get Playlist Tracks
+#' @name get_playlist_tracks
+#' @description This function returns all the tracks of a playlist.
+#' @author Donovan Wright
+#' @param playlist_id String of artist name.
+#' @param offset Integer indicating the offset of the first artist to return. Defaults to 0 (Spotify's API default value).
+#' @param access_token Spotify Web API token. Defaults to DSpoty::get_spotify_access_token().
 #' @return
-#' Returns a data frame with all the artist's information
+#' Returns a data frame with all the tracks of the selected playlist.
 #' @export
-#' @examples
-#' \dontrun{
-#' get_several_tracks(df,1)
-#' }
 
-
-get_several_tracks<-function(tracks_id_df, ids_label = 1, access_token = DSpoty::get_spotify_access_token()){
-
+get_playlist_tracks<-function(playlist_id, limit = 100, offset = 0, access_token = DSpoty::get_spotify_access_token()){
 
   uris<-tracks_id_df[,ids_label] %>% split(., ceiling(seq_along(.)/50)) %>% .$`1` %>% apply(., paste, MARGIN=2, collapse = ',')
 
   res<-lmap(seq_len(length(uris)), function(x){
 
     res1<-RETRY('GET',
-                url = str_glue('https://api.spotify.com/v1/tracks/'),
-                query = list(ids=uris[[x]], access_token= access_token),
+                url = str_glue(paste(c("https://api.spotify.com/v1/playlists/",playlist_id,"/tracks/"), collapse = "")),
+                query = list(market="US",fields="items(track(name%2Cid))", limit = limit, offset = offset, access_token= access_token),
                 quiet = TRUE) %>%
       content %>%
       .$tracks
@@ -36,10 +30,6 @@ get_several_tracks<-function(tracks_id_df, ids_label = 1, access_token = DSpoty:
     list(
       track_name = track$name,
       track_uri = track$id,
-      track_url = track$external_url$spotify,
-      artist_uri = track$artists[[1]]$id,
-      artist_name = track$artists[[1]]$name,
-      track_mp3_30s = if_else(is.null(track$preview_url), "NULL", track$preview_url)
 
     )
   })
