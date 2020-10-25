@@ -11,21 +11,17 @@
 
 get_playlist_tracks<-function(playlist_id, limit = 100, offset = 0, access_token = DSpoty::get_spotify_access_token()){
 
-  uris<-tracks_id_df[,ids_label] %>% split(., ceiling(seq_along(.)/50)) %>% .$`1` %>% apply(., paste, MARGIN=2, collapse = ',')
-
-  res<-lmap(seq_len(length(uris)), function(x){
-
     res1<-RETRY('GET',
                 url = str_glue(paste(c("https://api.spotify.com/v1/playlists/",playlist_id,"/tracks/"), collapse = "")),
                 query = list(market="US",fields="items(track(name%2Cid))", limit = limit, offset = offset, access_token= access_token),
-                quiet = TRUE) %>%
+                quiet = FALSE) %>%
       content %>%
       .$tracks
-  })
 
-  tracks<-map_df(seq_len(length(res)), function(this_row){
+  print(tracks)
+  tracks<-map_df(seq_len(length(res1)), function(this_row){
 
-    track<-res[[this_row]]
+    track<-res1[[this_row]]
 
     list(
       track_name = track$name,
