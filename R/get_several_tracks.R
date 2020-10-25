@@ -14,32 +14,23 @@
 #' }
 
 
-get_several_tracks<-function(tracks_id_df, ids_label = 1, access_token = DSpoty::get_spotify_access_token()){
-
-
-  uris<-tracks_id_df[,ids_label] %>% split(., ceiling(seq_along(.)/50)) %>% .$`1` %>% apply(., paste, MARGIN=2, collapse = ',')
-
-  res<-lmap(seq_len(length(uris)), function(x){
+get_several_tracks<-function(playlist_id, limit = 100, offset = 0, access_token = DSpoty::get_spotify_access_token()){
 
     res1<-RETRY('GET',
-                url = str_glue('https://api.spotify.com/v1/tracks/'),
-                query = list(ids=uris[[x]], access_token= access_token),
-                quiet = TRUE) %>%
+                url = str_glue(paste(c("https://api.spotify.com/v1/playlists/",playlist_id,"/tracks/"), collapse = "")),
+                query = list(market="US",fields="items(track(name%2Cid))", limit = limit, offset = offset, access_token= access_token),
+                quiet = FALSE) %>%
       content %>%
       .$tracks
-  })
 
-  tracks<-map_df(seq_len(length(res)), function(this_row){
+  print(tracks)
+  tracks<-map_df(seq_len(length(res1)), function(this_row){
 
-    track<-res[[this_row]]
+    track<-res1[[this_row]]
 
     list(
       track_name = track$name,
       track_uri = track$id,
-      track_url = track$external_url$spotify,
-      artist_uri = track$artists[[1]]$id,
-      artist_name = track$artists[[1]]$name,
-      track_mp3_30s = if_else(is.null(track$preview_url), "NULL", track$preview_url)
 
     )
   })
