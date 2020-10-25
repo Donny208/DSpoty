@@ -9,7 +9,7 @@
 #' Returns a data frame with all the tracks of the selected playlist.
 #' @export
 
-get_playlist_tracks<-function(playlist_id, limit = 100, offset = 0, access_token = DSpoty::get_spotify_access_token()){
+get_several_tracks<-function(playlist_id, limit = 100, offset = 0, access_token = DSpoty::get_spotify_access_token()){
 
   uris<-tracks_id_df[,ids_label] %>% split(., ceiling(seq_along(.)/50)) %>% .$`1` %>% apply(., paste, MARGIN=2, collapse = ',')
 
